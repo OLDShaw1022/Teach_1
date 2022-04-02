@@ -26,20 +26,26 @@ public class Player_Movement : MonoBehaviour
     void Update()
     {
         //Input
+
+        //Left and right movement
         movement.x = Input.GetAxisRaw("Horizontal");
+        //Jump when W key is down
         if (Input.GetKeyDown(KeyCode.W) && isGrounded)
         {
             Jump();
         }
-
-        //Logic
-        isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
     }
 
     //Update every certain frame
     private void FixedUpdate()
     {
+        //Change left and right rb velocity
         rb.velocity = new Vector2(movement.x * speed, rb.velocity.y);
+
+        //Logic
+
+        //change isGrounded to true when OverlapCircle touch groundLayer
+        isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
     }
 
     //Jump function
