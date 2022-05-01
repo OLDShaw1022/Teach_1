@@ -13,13 +13,28 @@ public class Player_Movement : MonoBehaviour
     public LayerMask groundLayer;
     public Transform groundCheck;
     public float groundCheckRadius;
+
+    Animator anim;
+    SpriteRenderer sprite;
     //logic
     bool isGrounded;
+
+    bool facingRight = true;
+
+    //effect
+    public ParticleSystem dustParticle;
+    public GameObject jumpDust;
 
     //Do when system start
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
+
+        anim = GetComponent<Animator>();
+        sprite = GetComponent<SpriteRenderer>();
+
+        var emmission = dustParticle.emission;
+        emmission.enabled = false;
     }
 
     //Update every screen frame
@@ -47,14 +62,72 @@ public class Player_Movement : MonoBehaviour
         //change isGrounded to true when OverlapCircle touch groundLayer
         isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
     }
+    private void LateUpdate()
+    {        
+        //Change animations
+        if (Mathf.Abs(movement.x) <= 0.1f)
+        {
+            anim.SetBool("Walk", false);
+        }
+        else
+        {
+            anim.SetBool("Walk", true);
+        }
+        if(rb.velocity.y < -0.1f)
+        {
+            anim.SetBool("Fall", true);
+        }
+        else
+        {
+            anim.SetBool("Fall", false);
+        }
+        if(movement.x > 0.1f && !facingRight)
+        {
+            Flip();
+        }
+        else if(movement.x < -0.1f && facingRight)
+        {
+            Flip();
+        }
+        
+        if(anim.GetBool("Walk") && isGrounded)
+        {
+            var emmission = dustParticle.emission;
+            emmission.enabled = true;
+        }
+        if (anim.GetBool("Fall"))
+        {
+            var emmission = dustParticle.emission;
+            emmission.enabled = false;
+        }
+    }
 
     //Jump function
     void Jump()
     {
         Vector2 jumpVec = new Vector2(0, 1 * jumpForce);
         rb.AddForce(jumpVec, ForceMode2D.Impulse);
+
+        anim.SetTrigger("Jump");
+
+        Instantiate(jumpDust, dustParticle.transform.position, dustParticle.transform.rotation);
+        StopAllCoroutines();
+        StartCoroutine(DustDelay());
     }
 
+    IEnumerator DustDelay()
+    {
+        yield return new WaitForSeconds(0.2f);
+        var emmission = dustParticle.emission;
+        emmission.enabled = false;
+    }
+
+    //Flip the sprite
+    void Flip()
+    {
+        sprite.flipX = !sprite.flipX;
+        facingRight = !facingRight;
+    }
     //Draw something on editor screen when selected
     private void OnDrawGizmosSelected()
     {
