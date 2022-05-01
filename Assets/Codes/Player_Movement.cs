@@ -13,13 +13,21 @@ public class Player_Movement : MonoBehaviour
     public LayerMask groundLayer;
     public Transform groundCheck;
     public float groundCheckRadius;
+
+    Animator anim;
+    SpriteRenderer sprite;
     //logic
     bool isGrounded;
+
+    bool facingRight = true;
 
     //Do when system start
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
+
+        anim = GetComponent<Animator>();
+        sprite = GetComponent<SpriteRenderer>();
     }
 
     //Update every screen frame
@@ -47,14 +55,48 @@ public class Player_Movement : MonoBehaviour
         //change isGrounded to true when OverlapCircle touch groundLayer
         isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
     }
+    private void LateUpdate()
+    {        
+        if (Mathf.Abs(movement.x) <= 0.1f)
+        {
+            anim.SetBool("Walk", false);
+        }
+        else
+        {
+            anim.SetBool("Walk", true);
+        }
+        if(rb.velocity.y < -0.1f)
+        {
+            anim.SetBool("Fall", true);
+        }
+        else
+        {
+            anim.SetBool("Fall", false);
+        }
+        if(movement.x > 0.1f && !facingRight)
+        {
+            Flip();
+        }
+        else if(movement.x < -0.1f && facingRight)
+        {
+            Flip();
+        }
+    }
 
     //Jump function
     void Jump()
     {
         Vector2 jumpVec = new Vector2(0, 1 * jumpForce);
         rb.AddForce(jumpVec, ForceMode2D.Impulse);
+
+        anim.SetTrigger("Jump");
     }
 
+    void Flip()
+    {
+        sprite.flipX = !sprite.flipX;
+        facingRight = !facingRight;
+    }
     //Draw something on editor screen when selected
     private void OnDrawGizmosSelected()
     {
